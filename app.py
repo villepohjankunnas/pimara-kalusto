@@ -10,7 +10,7 @@ KEY = "sb_publishable_u9AzUI0N_A80-dVedNPzCg_IT7bkxH4"
 supabase: Client = create_client(URL, KEY)
 BUCKET_NAME = "pimara-kuvat"
 
-# --- 2. TYYLIT (PIMARA INDUSTRIAL & MOBILE OPTIMIZED) ---
+# --- 2. TYYLIT (PIMARA BRAND & MOBILE) ---
 st.set_page_config(page_title="PIMARA Kalustonhallinta Pro", layout="wide")
 
 def apply_pro_style():
@@ -18,8 +18,6 @@ def apply_pro_style():
         <style>
         :root { --p-yellow: #ffcc00; --p-dark: #1a1a1a; --p-text: #000000; }
         .stApp { background-color: #ffffff; }
-        
-        /* Sivupalkki keltaisilla painonapeilla */
         [data-testid="stSidebar"] { background-color: var(--p-dark) !important; min-width: 280px !important; }
         div.stSidebar [data-testid="stVerticalBlock"] button {
             background-color: var(--p-yellow) !important;
@@ -31,45 +29,28 @@ def apply_pro_style():
             padding: 15px !important;
             margin-bottom: 10px !important;
             width: 100% !important;
-            transition: 0.3s;
         }
-        div.stSidebar [data-testid="stVerticalBlock"] button:hover {
-            background-color: #e6b800 !important;
-            transform: scale(1.02);
-        }
-        
-        /* Kortit ja Alertit */
         .mobile-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; background-color: #fcfcfc; border-left: 8px solid var(--p-yellow); }
         .alert-card-warning { padding: 15px; background-color: #fff3cd; border-left: 10px solid #ffc107; margin-bottom: 10px; color: #856404; font-weight: bold; }
         .alert-card-danger { padding: 15px; background-color: #f8d7da; border-left: 10px solid #dc3545; margin-bottom: 10px; color: #721c24; font-weight: bold; }
-
-        h1, h2, h3 { color: var(--p-dark); font-weight: 800; text-transform: uppercase; border-left: 15px solid var(--p-yellow); padding-left: 15px; margin-top: 20px; }
+        h1, h2, h3 { color: var(--p-dark); font-weight: 800; text-transform: uppercase; border-left: 15px solid var(--p-yellow); padding-left: 15px; }
         .brand-header { background-color: var(--p-dark); padding: 2rem; border-bottom: 6px solid var(--p-yellow); margin: -6rem -5rem 2rem -5rem; display: flex; align-items: center; }
         .logo-main { color: var(--p-yellow); font-size: 2.2rem; font-weight: 900; }
-        
-        /* Kalustokortin taulukko */
         .tech-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         .tech-table td { border: 1px solid #ccc; padding: 12px; font-size: 0.95rem; }
         .tech-label { background-color: #f0f0f0; font-weight: bold; width: 30%; color: #333; }
-
-        @media (max-width: 600px) {
-            .tech-table tr { display: flex; flex-direction: column; border-bottom: 2px solid #ddd; }
-            .tech-table td { width: 100% !important; border: none; padding: 5px 10px; }
-        }
         </style>
     """, unsafe_allow_html=True)
 
 apply_pro_style()
 
-# --- 3. NAVIGAATION JA STATEN HALLINTA ---
+# --- 3. NAVIGAATIO JA STATE ---
 if 'sivu' not in st.session_state: st.session_state.sivu = "TYÖPÖYTÄ"
 if 'kortti_id' not in st.session_state: st.session_state.kortti_id = None
-if 'edit_target' not in st.session_state: st.session_state.edit_target = None # (taulu, id)
 
 def vaihda_sivu(nimi):
     st.session_state.sivu = nimi
     st.session_state.kortti_id = None
-    st.session_state.edit_target = None
 
 # --- 4. APUFUNKTIOT ---
 def get_konetyypit():
@@ -103,24 +84,24 @@ def upload_image(file, folder_prefix):
         return supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
     except: return None
 
-# --- 5. VISUAALINEN KALUSTOKORTTI-KOMPONENTTI ---
+# --- 5. VISUAALINEN KONEKORTTI-KOMPONENTTI ---
 def render_kone_kortti(k, y_dict, show_actions=False, task_id=None):
-    """Piirtää teknisen kortin koneesta. Jos show_actions=True, lisätään kuittausnapit."""
-    st.markdown(f'<div class="kortti-header">AJONEUVOKORTTI | {k.get("nimi","")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kortti-header">KALUSTOKORTTI | {k.get("nimi","")}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="kortti-banner">{k.get("rekisteri", "EI REK")}</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 1.5])
     with col1:
         if k.get("kuva_url"): st.image(k["kuva_url"], use_container_width=True)
-        else: st.info("Ei kuvaa.")
+        else: st.info("Ei valokuvaa.")
         
     with col2:
         st.markdown(f"""
         <table class="tech-table">
-            <tr><td class="tech-label">Omistaja</td><td>{y_dict.get(k.get('omistaja_id',0), 'Määrittämätön')}</td></tr>
-            <tr><td class="tech-label">Konetyyppi</td><td>{k.get('tyyppi','')}</td></tr>
-            <tr><td class="tech-label">Merkki/Malli</td><td>{k.get('merkki','')} {k.get('malli','')}</td></tr>
-            <tr><td class="tech-label">S/N</td><td>{k.get('sarjanumero','')}</td></tr>
+            <tr><td class="tech-label">Omistaja</td><td>{y_dict.get(k.get('omistaja_id',0), 'Pimara')}</td></tr>
+            <tr><td class="tech-label">Merkki / Malli</td><td>{k.get('merkki','')} {k.get('malli','')}</td></tr>
+            <tr><td class="tech-label">Vuosimalli</td><td>{k.get('vuosimalli','')}</td></tr>
+            <tr><td class="tech-label">Teho / Moottori</td><td>{k.get('teho','')} kW / {k.get('moottori','')}</td></tr>
+            <tr><td class="tech-label">Massat (Oma/Kant)</td><td>{k.get('omamassa','')} / {k.get('kantavuus','')} kg</td></tr>
             <tr><td class="tech-label">Katsastus</td><td><b>{k.get('katsastus_pvm','')}</b></td></tr>
         </table>
         """, unsafe_allow_html=True)
@@ -128,22 +109,19 @@ def render_kone_kortti(k, y_dict, show_actions=False, task_id=None):
         if show_actions:
             st.write("---")
             act1, act2 = st.columns(2)
-            if act1.button(f"KATSASTETTU", key=f"kats_{k['id']}_{task_id}"):
-                uusi_pvm = (date.today() + timedelta(days=365)).strftime("%d.%m.%Y")
-                supabase.table("koneet").update({"katsastus_pvm": uusi_pvm}).eq("id", k['id']).execute()
-                supabase.table("huollot").insert({"kone_id": k['id'], "pvm": date.today().isoformat(), "kuvaus": "Määräaikaiskatsastus suoritettu"}).execute()
-                st.success("Katsastus päivitetty vuodella eteenpäin!")
+            if act1.button(f"KATSASTETTU", key=f"dash_kats_{k['id']}_{task_id}"):
+                uusi_kats = (date.today() + timedelta(days=365)).strftime("%d.%m.%Y")
+                supabase.table("koneet").update({"katsastus_pvm": uusi_kats}).eq("id", k['id']).execute()
+                supabase.table("huollot").insert({"kone_id": k['id'], "pvm": date.today().isoformat(), "tyyppi": "Katsastus", "kuvaus": "Määräaikaiskatsastus hyväksytty"}).execute()
                 st.rerun()
-            if act2.button(f"HUOLLETTU", key=f"huol_{k['id']}_{task_id}"):
-                if task_id:
-                    supabase.table("aikataulu").update({"suoritettu": True}).eq("id", task_id).execute()
-                supabase.table("huollot").insert({"kone_id": k['id'], "pvm": date.today().isoformat(), "kuvaus": "Määräaikaishuolto suoritettu (Dashboard)"}).execute()
-                st.success("Huolto kirjattu historiaan!")
+            if act2.button(f"HUOLLETTU", key=f"dash_huol_{k['id']}_{task_id}"):
+                if task_id: supabase.table("aikataulu").update({"suoritettu": True}).eq("id", task_id).execute()
+                supabase.table("huollot").insert({"kone_id": k['id'], "pvm": date.today().isoformat(), "tyyppi": "Huolto", "kuvaus": "Määräaikaishuolto suoritettu (Dashboard)"}).execute()
                 st.rerun()
 
 # --- 6. SIVUPALKKI ---
 with st.sidebar:
-    st.markdown('<div style="padding:20px; text-align:center; color:#ffcc00; font-size:2rem; font-weight:900; border-bottom:1px solid #333; margin-bottom:20px;">PIMARA</div>', unsafe_allow_html=True)
+    st.markdown('<div style="padding:20px; text-align:center; color:#ffcc00; font-size:2rem; font-weight:900;">PIMARA</div>', unsafe_allow_html=True)
     if st.button("TYÖPÖYTÄ"): vaihda_sivu("TYÖPÖYTÄ")
     if st.button("KONEREKISTERI"): vaihda_sivu("KONEET")
     if st.button("HALLINTA"): vaihda_sivu("HALLINTA")
@@ -152,169 +130,178 @@ with st.sidebar:
 
 st.markdown('<div class="brand-header"><span class="logo-main">PIMARA</span><span style="color:white; margin-left:15px; font-weight:200;">KALUSTONHALLINTA</span></div>', unsafe_allow_html=True)
 
-# --- 7. SIVU: TYÖPÖYTÄ (UUSI NÄKYMÄ) ---
+# --- 7. SIVU: TYÖPÖYTÄ ---
 if st.session_state.sivu == "TYÖPÖYTÄ":
-    st.header("Dashboard - Työnalle tuleva kalusto")
-    
-    tanaan = date.today()
-    raja_pvm = tanaan + timedelta(days=30)
+    st.header("Dashboard - Huolto- ja katsastusjono")
+    raja_pvm = date.today() + timedelta(days=30)
     y_dict = get_yhtiot()
-    
-    # 1. METRIIKAT
-    c1, c2, c3 = st.columns(3)
-    k_res = supabase.table("koneet").select("id", count="exact").execute()
-    u_res = supabase.table("urakat").select("id", count="exact").execute()
-    c1.metric("Koneet", k_res.count if k_res.count else 0)
-    c2.metric("Aktiiviset urakat", u_res.count if u_res.count else 0)
-    
-    # 2. HÄLYTYSLOGIIKKA JA KORTIT
-    st.subheader("Huolto- ja katsastusjonossa")
-    
-    # Haetaan koneet joilla katsastus lähellä tai ohi
     koneet = supabase.table("koneet").select("*").execute().data
-    pending_ids = set() # Estetään duplikaatit
-    
+    naytetty_ids = set()
+
     for k in koneet:
-        needs_showing = False
+        # Tarkistus: Katsastus
         if k['katsastus_pvm']:
             try:
                 kpvm = datetime.strptime(k['katsastus_pvm'], "%d.%m.%Y").date()
-                if kpvm <= raja_pvm: needs_showing = True
+                if kpvm <= raja_pvm:
+                    with st.container():
+                        render_kone_kortti(k, y_dict, show_actions=True)
+                        naytetty_ids.add(k['id'])
             except: pass
-            
-        # Tarkista myös onko aikataulussa avoin tehtävä
+        
+        # Tarkistus: Vuosikellon avoimet tehtävät
         v_tasks = supabase.table("aikataulu").select("*").eq("kone_id", k['id']).eq("suoritettu", False).execute().data
         for t in v_tasks:
-            try:
-                vpvm = date.fromisoformat(t['erapaiva'])
-                if vpvm <= raja_pvm: 
-                    needs_showing = True
-                    # Jos on tehtävä, renderöidään kortti tehtävä-id:n kanssa
-                    with st.container():
-                        render_kone_kortti(k, y_dict, show_actions=True, task_id=t['id'])
-                        st.markdown(f"**Tehtävä:** {t['tyyppi']} - {t['kuvaus']} (Eräpäivä: {t['erapaiva']})")
-                        pending_ids.add(k['id'])
-            except: pass
-            
-        # Jos vain katsastus on lähellä mutta ei tehtävää
-        if needs_showing and k['id'] not in pending_ids:
-            with st.container():
-                render_kone_kortti(k, y_dict, show_actions=True)
-                pending_ids.add(k['id'])
-
-    if not pending_ids:
-        st.success("Ei välittömiä huolto- tai katsastustarpeita.")
-
-# --- 8. SIVU: HALLINTA (KESKITETTY HALLINTA) ---
-elif st.session_state.sivu == "HALLINTA":
-    st.header("Järjestelmän hallinta")
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["KONETYYPIT", "YHTIÖT", "URAKAT", "KONEIDEN MUOKKAUS", "LISÄLAITTEIDEN MUOKKAUS"])
+            if date.fromisoformat(t['erapaiva']) <= raja_pvm and k['id'] not in naytetty_ids:
+                with st.container():
+                    render_kone_kortti(k, y_dict, show_actions=True, task_id=t['id'])
+                    st.warning(f"TEHTÄVÄ: {t['tyyppi']} - {t['kuvaus']} (Eräpäivä: {t['erapaiva']})")
+                    naytetty_ids.add(k['id'])
     
-    # TÄÄLLÄ ON KAIKKI MUOKKAUS JA POISTO LOGIIKKA
-    with tab1:
-        st.subheader("Konetyyppien hallinta")
-        c1, c2 = st.columns([3,1])
-        u_typ = c1.text_input("Uusi konetyyppi").strip()
-        if c2.button("LISÄÄ TYYPPI"):
-            if u_typ:
-                supabase.table("konetyypit").insert({"nimi": u_typ}).execute()
+    if not naytetty_ids: st.success("Ei välittömiä huoltotoimenpiteitä.")
+
+# --- 8. SIVU: HALLINTA (TÄYSI CRUD ILMAN TIIVISTYSTÄ) ---
+elif st.session_state.sivu == "HALLINTA":
+    st.header("Järjestelmän asetukset")
+    t1, t2, t3, t4, t5 = st.tabs(["KONETYYPIT", "YHTIÖT", "URAKAT", "KONEET", "LISÄLAITTEET"])
+
+    with t1:
+        st.subheader("Konetyypit")
+        with st.form("f_t"):
+            nt = st.text_input("Uusi tyyppi")
+            if st.form_submit_button("LISÄÄ"):
+                supabase.table("konetyypit").insert({"nimi": nt}).execute()
                 st.rerun()
-        
-        tyypit = get_konetyypit()
-        for t in tyypit:
-            col_t, col_b = st.columns([4,1])
-            col_t.write(t)
-            if col_b.button("POISTA", key=f"del_t_{t}"):
+        for t in get_konetyypit():
+            c1, c2 = st.columns([4,1])
+            c1.write(t)
+            if c2.button("POISTA", key=f"dt_{t}"):
                 supabase.table("konetyypit").delete().eq("nimi", t).execute()
                 st.rerun()
 
-    with tab2:
-        st.subheader("Yhtiöiden hallinta")
-        with st.form("y_form", clear_on_submit=True):
-            yn = st.text_input("Yhtiön nimi")
-            yt = st.text_input("Y-tunnus")
-            if st.form_submit_button("LISÄÄ YHTIÖ"):
-                supabase.table("yhtiot").insert({"nimi": yn, "y_tunnus": yt}).execute()
+    with t2:
+        st.subheader("Konserniyhtiöt")
+        with st.form("f_y"):
+            yn, yt, yo = st.text_input("Nimi"), st.text_input("Y-tunnus"), st.text_input("Osoite")
+            if st.form_submit_button("TALLENNA"):
+                supabase.table("yhtiot").insert({"nimi": yn, "y_tunnus": yt, "osoite": yo}).execute()
                 st.rerun()
-        y_data = supabase.table("yhtiot").select("*").execute().data
-        for y in y_data:
-            c1, c2 = st.columns([4,1])
-            c1.write(f"**{y['nimi']}** ({y['y_tunnus']})")
-            if c2.button("POISTA", key=f"dy_{y['id']}"):
+        for y in supabase.table("yhtiot").select("*").execute().data:
+            st.write(f"**{y['nimi']}**")
+            if st.button("POISTA YHTIÖ", key=f"dy_{y['id']}"):
                 supabase.table("yhtiot").delete().eq("id", y['id']).execute()
                 st.rerun()
 
-    with tab3:
-        st.subheader("Urakoiden hallinta")
-        with st.form("u_form"):
-            un = st.text_input("Urakan nimi")
-            uo = st.text_input("Osoite / Sijainti")
+    with t3:
+        st.subheader("Urakkahallinta")
+        with st.form("f_u"):
+            un, uo, up = st.text_input("Urakan nimi"), st.text_input("Osoite"), st.text_input("PM Nimi")
+            uph, uem = st.text_input("PM Puhelin"), st.text_input("PM Sähköposti")
             if st.form_submit_button("LISÄÄ URAKKA"):
-                supabase.table("urakat").insert({"nimi": un, "yhteystiedot": uo}).execute()
+                supabase.table("urakat").insert({"nimi":un, "yhteystiedot":uo, "tyopaallikko":up, "puhelin":uph, "sahkoposti":uem}).execute()
                 st.rerun()
-        u_data = supabase.table("urakat").select("*").execute().data
-        for u in u_data:
-            c1, c2 = st.columns([4,1])
-            c1.write(f"**{u['nimi']}** - {u['yhteystiedot']}")
-            if c2.button("POISTA", key=f"du_{u['id']}"):
+        for u in supabase.table("urakat").select("*").execute().data:
+            st.markdown(f"**{u['nimi']}** ({u.get('tyopaallikko','')})")
+            if st.button("POISTA URAKKA", key=f"du_{u['id']}"):
                 supabase.table("urakat").delete().eq("id", u['id']).execute()
                 st.rerun()
 
-    with tab4:
-        st.subheader("Koneiden muokkaus ja poisto")
-        k_data = supabase.table("koneet").select("id, nimi, tyyppi, rekisteri").execute().data
-        for k in k_data:
-            with st.expander(f"{k['nimi']} ({k['rekisteri']})"):
-                # Tässä voisi olla täysi muokkauslomake, mutta tehdään poisto pika-apuna
-                if st.button("POISTA KONE LOPULLISESTI", key=f"dk_{k['id']}"):
-                    supabase.table("koneet").delete().eq("id", k['id']).execute()
+    with t4:
+        st.subheader("Koneiden hallinta")
+        with st.expander("LISÄÄ UUSI KONE (KAIKKI TIEDOT)"):
+            with st.form("f_k_full"):
+                c1, c2, c3 = st.columns(3)
+                # S1
+                kn = c1.text_input("Tunnus / Nimi")
+                kt = c1.selectbox("Konetyyppi", get_konetyypit())
+                ky = c1.selectbox("Omistajayhtiö", list(get_yhtiot().keys()), format_func=lambda x: get_yhtiot()[x])
+                kmerkki = c1.text_input("Merkki")
+                kmalli = c1.text_input("Malli")
+                ksn = c1.text_input("Sarjanumero")
+                # S2
+                kre = c2.text_input("Rekisterinumero")
+                kvu = c2.text_input("Vuosimalli")
+                kvo = c2.text_input("Käyttövoima")
+                kpa = c2.text_input("Päästöluokka")
+                kmo = c2.text_input("Moottorin tiedot")
+                kte = c2.text_input("Teho (kW)")
+                # S3
+                klu = c3.text_input("Ajoneuvoluokka")
+                kak = c3.text_input("Akselit")
+                kpi = c3.text_input("Pituus (mm)")
+                kko = c3.text_input("Korkeus (mm)")
+                kom = c3.text_input("Omamassa (kg)")
+                kka = c3.text_input("Kantavuus (kg)")
+                
+                kkat = st.text_input("Katsastuspäivä (pv.kk.vvvv)")
+                kur = st.selectbox("Sijainti", list(get_urakat().keys()), format_func=lambda x: get_urakat()[x])
+                kimg = st.file_uploader("Valokuva")
+                
+                if st.form_submit_button("TALLENNA KONE"):
+                    url = upload_image(kimg, "kone") if kimg else None
+                    payload = {
+                        "nimi": kn, "tyyppi": kt, "omistaja_id": ky, "merkki": kmerkki, "malli": kmalli, "sarjanumero": ksn,
+                        "rekisteri": kre, "vuosimalli": kvu, "kayttovoima": kvo, "paastoluokka": kpa, "moottori": kmo, "teho": kte,
+                        "luokka": klu, "akselit": kak, "pituus": kpi, "korkeus": kko, "omamassa": kom, "kantavuus": kka,
+                        "katsastus_pvm": kkat, "urakka_id": kur, "kuva_url": url, "tila": "Käytössä"
+                    }
+                    supabase.table("koneet").insert(payload).execute()
                     st.rerun()
 
-# --- 9. SIVU: KONEREKISTERI (SELAILU) ---
+        for k in supabase.table("koneet").select("id, nimi, rekisteri").execute().data:
+            c1, c2 = st.columns([4,1])
+            c1.write(f"**{k['nimi']}** ({k['rekisteri']})")
+            if c2.button("POISTA", key=f"dk_{k['id']}"):
+                supabase.table("koneet").delete().eq("id", k['id']).execute()
+                st.rerun()
+
+    with t5:
+        st.subheader("Lisälaitteet")
+        with st.form("f_l"):
+            ln, lme = st.text_input("Laitteen nimi"), st.text_input("Merkki")
+            lma, lsn = st.text_input("Malli"), st.text_input("Valmistenumero")
+            lk = st.selectbox("Kytke koneeseen", list(get_koneiden_nimet().keys()), format_func=lambda x: get_koneiden_nimet()[x])
+            if st.form_submit_button("LISÄÄ LAITE"):
+                supabase.table("lisalaitteet").insert({"nimi": ln, "merkki": lme, "malli": lma, "valmistenumero": lsn, "kone_id": lk}).execute()
+                st.rerun()
+        for l in supabase.table("lisalaitteet").select("id, nimi").execute().data:
+            c1, c2 = st.columns([4,1])
+            c1.write(l['nimi'])
+            if c2.button("POISTA", key=f"dl_{l['id']}"):
+                supabase.table("lisalaitteet").delete().eq("id", l['id']).execute()
+                st.rerun()
+
+# --- 9. KONEREKISTERI (KATSELU) ---
 elif st.session_state.sivu == "KONEET":
     if st.session_state.kortti_id:
-        k_id = st.session_state.kortti_id
-        res = supabase.table("koneet").select("*").eq("id", k_id).execute()
-        if res.data:
-            render_kone_kortti(res.data[0], get_yhtiot())
-        if st.button("SULJE KORTTI"):
+        res = supabase.table("koneet").select("*").eq("id", st.session_state.kortti_id).execute().data
+        if res: render_kone_kortti(res[0], get_yhtiot())
+        if st.button("SULJE"):
             st.session_state.kortti_id = None
             st.rerun()
     else:
         st.header("Kalustoluettelo")
-        tyypit = get_konetyypit()
-        f_tyyppi = st.multiselect("Suodata tyypillä", tyypit)
-        
-        q = supabase.table("koneet").select("id, nimi, tyyppi, rekisteri")
-        if f_tyyppi: q = q.in_("tyyppi", f_tyyppi)
-        res = q.execute()
-        
-        for r in res.data:
+        for r in supabase.table("koneet").select("id, nimi, tyyppi, rekisteri").execute().data:
             st.markdown(f'<div class="mobile-card"><b>{r["nimi"]}</b> ({r["tyyppi"]})<br>Rek: {r["rekisteri"]}</div>', unsafe_allow_html=True)
-            if st.button("AVAA KALUSTOKORTTI", key=f"open_{r['id']}"):
+            if st.button("AVAA KORTTI", key=f"view_{r['id']}"):
                 st.session_state.kortti_id = r['id']
                 st.rerun()
 
-# --- 10. SIVU: HISTORIA JA VUOSIKELLO (ENNALLEEN) ---
+# --- 10. HISTORIA JA VUOSIKELLO (ENNALLEEN) ---
 elif st.session_state.sivu == "HISTORIA":
     st.header("Huoltohistoria")
-    h_res = supabase.table("huollot").select("*").order("pvm", desc=True).execute()
-    k_nimet = get_koneiden_nimet()
-    for h in h_res.data:
-        st.markdown(f'<div class="mobile-card"><b>{k_nimet.get(h["kone_id"])}</b> - {h["pvm"]}<br>{h["kuvaus"]}</div>', unsafe_allow_html=True)
+    h_data = supabase.table("huollot").select("*").order("pvm", desc=True).execute().data
+    kn = get_koneiden_nimet()
+    for h in h_data:
+        st.markdown(f'<div class="mobile-card"><b>{kn.get(h["kone_id"])}</b> - {h["pvm"]}<br><b>{h.get("tyyppi","Huolto")}:</b> {h["kuvaus"]}</div>', unsafe_allow_html=True)
 
 elif st.session_state.sivu == "VUOSIKELLO":
-    st.header("Vuosikello")
-    k_opts = get_koneiden_nimet()
-    with st.expander("LISÄÄ TAPAHTUMA"):
-        with st.form("v_f"):
-            vk = st.selectbox("Kone", list(k_opts.keys()), format_func=lambda x: k_opts[x])
-            vp = st.date_input("Päivä")
-            vt = st.text_input("Tehtävä")
-            if st.form_submit_button("LISÄÄ"):
-                supabase.table("aikataulu").insert({"kone_id": vk, "erapaiva": vp.isoformat(), "tyyppi": vt, "suoritettu": False}).execute()
-                st.rerun()
-    
-    v_res = supabase.table("aikataulu").select("*").eq("suoritettu", False).order("erapaiva").execute()
-    for r in v_res.data:
-        st.markdown(f'<div class="mobile-card"><b>{k_opts.get(r["kone_id"])}</b>: {r["erapaiva"]}<br>{r["tyyppi"]}</div>', unsafe_allow_html=True)
+    st.header("Vuosikello - Uusi suunniteltu huolto")
+    with st.form("v_f"):
+        vk = st.selectbox("Kone", list(get_koneiden_nimet().keys()), format_func=lambda x: get_koneiden_nimet()[x])
+        vp, vt = st.date_input("Määräpäivä"), st.text_input("Huolto / Tehtävä")
+        if st.form_submit_button("LISÄÄ SUUNNITELMAAN"):
+            supabase.table("aikataulu").insert({"kone_id": vk, "erapaiva": vp.isoformat(), "tyyppi": vt, "suoritettu": False}).execute()
+            st.rerun()
+    for r in supabase.table("aikataulu").select("*").eq("suoritettu", False).order("erapaiva").execute().data:
+        st.markdown(f'<div class="mobile-card"><b>{get_koneiden_nimet().get(r["kone_id"])}</b>: {r["erapaiva"]}<br>{r["tyyppi"]}</div>', unsafe_allow_html=True)
