@@ -1,10 +1,10 @@
 import streamlit as st
 from supabase import create_client, Client
 
-# Supabase-yhteys
-URL = "https://zpyvpqnomoufadcnxqqb.supabase.co"
-KEY = "sb_publishable_u9AzUI0N_A80-dVedNPzCg_IT7bkxH4"
-supabase: Client = create_client(URL, KEY)
+# Supabase-yhteyden tiedot
+SUPABASE_URL = "https://zpyvpqnomoufadcnxqqb.supabase.co"
+SUPABASE_KEY = "sb_publishable_u9AzUI0N_A80-dVedNPzCg_IT7bkxH4"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 BUCKET_NAME = "pimara-kuvat"
 
 def apply_pro_style():
@@ -32,6 +32,6 @@ def apply_pro_style():
         .logo-main { color: var(--p-yellow); font-size: 2.2rem; font-weight: 900; }
         .tech-table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
         .tech-table td { border: 1px solid #ccc; padding: 12px; font-size: 0.95rem; }
-        .tech-label { background-color: #f0f0f0; font-weight: bold; width: 30%; color: #333; }
+        .tech-label { background-color: #f0f0f0; font-weight: bold; width: 35%; color: #333; }
         </style>
     """, unsafe_allow_html=True)

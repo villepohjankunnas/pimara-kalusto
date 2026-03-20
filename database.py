@@ -1,7 +1,6 @@
-from datetime import datetime
 from config import supabase, BUCKET_NAME
+from datetime import datetime
 
-# --- HAUT ---
 def get_konetyypit():
     res = supabase.table("konetyypit").select("nimi").execute()
     return [r['nimi'] for r in res.data] if res.data else []
@@ -12,7 +11,7 @@ def get_lisalaitetyypit():
 
 def get_yhtiot():
     res = supabase.table("yhtiot").select("id, nimi").execute()
-    d = {0: "Määrittämätön / Pimara"}
+    d = {0: "Valitse yhtiö / Pimara"}
     for r in res.data: d[r['id']] = r['nimi']
     return d
 
@@ -28,7 +27,6 @@ def get_koneiden_nimet():
     for r in res.data: d[r['id']] = r['nimi']
     return d
 
-# --- TOIMINNOT ---
 def upload_image(file, folder_prefix):
     try:
         file_extension = file.name.split('.')[-1]
@@ -38,8 +36,11 @@ def upload_image(file, folder_prefix):
         return supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
     except: return None
 
-def poista_kohde(taulu, kohde_id):
-    supabase.table(taulu).delete().eq("id", kohde_id).execute()
+def poista_rivi(taulu, rivi_id):
+    supabase.table(taulu).delete().eq("id", rivi_id).execute()
 
-def poista_tyyppi(taulu, nimi):
-    supabase.table(taulu).delete().eq("nimi", nimi).execute()
+def poista_konetyyppi(nimi):
+    supabase.table("konetyypit").delete().eq("nimi", nimi).execute()
+
+def poista_lisalaitetyyppi(nimi):
+    supabase.table("lisalaitetyypit").delete().eq("nimi", nimi).execute()
